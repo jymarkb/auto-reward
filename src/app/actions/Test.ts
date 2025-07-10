@@ -1,0 +1,142 @@
+"use server";
+import { request } from "undici";
+import { CookieJar } from "tough-cookie";
+import { load } from "cheerio";
+import crypto from "crypto";
+import { URLSearchParams } from "url";
+import { tokenBodyType } from "@/lib/utils";
+import { ActionAPI } from "./Action";
+import { JunkenAPI, DailyAPI } from "@/lib/static";
+
+const jar = new CookieJar();
+
+function generatePKCE() {
+  const verifier = crypto.randomBytes(64).toString("hex");
+  const challenge = crypto
+    .createHash("sha256")
+    .update(verifier)
+    .digest()
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+  return { verifier, challenge };
+}
+
+export const loginAndAuthorize = async (formData: FormData) => {
+  const loginUrl = "https://auth.combo-interactive.com/cabalmsea/login";
+  const authorizeBaseUrl = "https://auth.combo-interactive.com/oauth/authorize";
+  const tokenUrl = "https://auth.combo-interactive.com/oauth/token";
+  const redirectUri = "https://sea-member.combocabalm.com/oauth/callback";
+  const clientId = "c45febcb-fec7-4bd9-a7fc-d777758ee1dd";
+
+  const username = formData.get("username") as string;
+  if (!username) throw new Error("Missing credentials");
+
+  console.log(`✅ User: ${username}`);
+
+  // Step 1: Get CSRF token
+  const loginPage = await request(loginUrl, { method: "GET" });
+  const html = await loginPage.body.text();
+  const $ = load(html);
+  const csrfToken = $('input[name="_token"]').val();
+  if (!csrfToken) throw new Error("CSRF token not found");
+
+  const setCookies = loginPage.headers["set-cookie"];
+  if (setCookies) {
+    (Array.isArray(setCookies) ? setCookies : [setCookies]).forEach((c) =>
+      jar.setCookieSync(c, loginUrl)
+    );
+  }
+
+  // Step 2: POST login form
+  const password = process.env.PASSWORD as string
+  const loginPayload = new URLSearchParams();
+  loginPayload.append("_token", csrfToken as string);
+  loginPayload.append("username", username);
+  loginPayload.append("password", password);
+
+  const loginRes = await request(loginUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Cookie: await jar.getCookieString(loginUrl),
+    },
+    body: loginPayload.toString(),
+    maxRedirections: 0,
+  });
+
+  const postCookies = loginRes.headers["set-cookie"];
+  if (postCookies) {
+    (Array.isArray(postCookies) ? postCookies : [postCookies]).forEach((c) =>
+      jar.setCookieSync(c, loginUrl)
+    );
+  }
+
+  console.log("✅ Successfuly Login");
+
+  // Step 3: GET /oauth/authorize
+  const { verifier, challenge } = generatePKCE();
+  const state = crypto.randomBytes(16).toString("hex");
+  const authorizeUrl = `${authorizeBaseUrl}?client_id=${clientId}&code_challenge=${challenge}&code_challenge_method=S256&lang=en&redirect_uri=${encodeURIComponent(
+    redirectUri
+  )}&response_type=code&scope=&state=${state}`;
+
+  const authPage = await request(authorizeUrl, {
+    method: "GET",
+    headers: {
+      Cookie: await jar.getCookieString(authorizeUrl),
+    },
+    maxRedirections: 0,
+  });
+
+  const location = authPage.headers["location"];
+  if (!location || !location.includes("code=")) {
+    throw new Error("Failed to retrieve authorization code");
+  }
+
+  const url = Array.isArray(location) ? location[0] : location;
+  const urlObj = new URL(url);
+  const code = urlObj.searchParams.get("code");
+
+  if (!code) throw new Error("No auth code returned");
+
+  console.log("✅ Get OAuth Code");
+
+  // ✅ Step 4: Exchange code for token
+  const tokenPayload = new URLSearchParams();
+  tokenPayload.append("grant_type", "authorization_code");
+  tokenPayload.append("client_id", clientId);
+  tokenPayload.append("redirect_uri", redirectUri);
+  tokenPayload.append("code_verifier", verifier);
+  tokenPayload.append("code", code);
+
+  const tokenRes = await request(tokenUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: tokenPayload.toString(),
+  });
+
+  // Always parse the body first
+  const tokenBody = (await tokenRes.body.json()) as tokenBodyType;
+
+  // Check for HTTP error *after* parsing
+  if (tokenRes.statusCode !== 200) {
+    console.error("❌ Token Error:", tokenBody);
+    throw new Error("Failed to exchange code for token");
+  }
+
+  console.log("✅ Token Generated");
+
+  const daily = DailyAPI(tokenBody);
+  const junken = JunkenAPI(tokenBody);
+  const data = [...daily, ...junken];
+
+  for (const element of data) {
+    for (let i = 0; i < element.limit; i++) {
+      await ActionAPI(element);
+    }
+  }
+};
