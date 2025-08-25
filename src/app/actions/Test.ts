@@ -60,8 +60,7 @@ export const loginAndAuthorize = async (formData: FormData) => {
       "Content-Type": "application/x-www-form-urlencoded",
       Cookie: await jar.getCookieString(loginUrl),
     },
-    body: loginPayload.toString(),
-    maxRedirections: 0,
+    body: loginPayload.toString()
   });
 
   const postCookies = loginRes.headers["set-cookie"];
@@ -85,7 +84,6 @@ export const loginAndAuthorize = async (formData: FormData) => {
     headers: {
       Cookie: await jar.getCookieString(authorizeUrl),
     },
-    maxRedirections: 0,
   });
 
   const location = authPage.headers["location"];
