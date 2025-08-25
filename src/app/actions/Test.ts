@@ -1,42 +1,37 @@
 "use server";
-import { request } from "undici";
-import { CookieJar } from "tough-cookie";
 import { load } from "cheerio";
+import { request, Agent } from "undici";
+import { CookieJar } from "tough-cookie";;
 import crypto from "crypto";
 import { URLSearchParams } from "url";
 import { tokenBodyType } from "@/lib/utils";
 import { ActionAPI } from "./Action";
-import { JunkenAPI, DailyAPI } from "@/lib/static";
-
-const jar = new CookieJar();
-
-function generatePKCE() {
-  const verifier = crypto.randomBytes(64).toString("hex");
-  const challenge = crypto
-    .createHash("sha256")
-    .update(verifier)
-    .digest()
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-  return { verifier, challenge };
-}
+import { JunkenAPI, DailyAPI, ShootFranky, WheelApi } from "@/lib/static";
+import { GeneratePKCE } from "./Generate";
 
 export const loginAndAuthorize = async (formData: FormData) => {
-  const loginUrl = "https://auth.combo-interactive.com/cabalmsea/login";
+  // 
   const authorizeBaseUrl = "https://auth.combo-interactive.com/oauth/authorize";
   const tokenUrl = "https://auth.combo-interactive.com/oauth/token";
   const redirectUri = "https://sea-member.combocabalm.com/oauth/callback";
-  const clientId = "c45febcb-fec7-4bd9-a7fc-d777758ee1dd";
+  const clientId = "c45febcb-fec7-4bd9-a7fc-d777758ee1dd";``
+  const loginUrl = "https://auth.combo-interactive.com/cabalmsea/login";
+
+  const jar = new CookieJar();
 
   const username = formData.get("username") as string;
   if (!username) throw new Error("Missing credentials");
 
-  console.log(`✅ User: ${username}`);
-
   // Step 1: Get CSRF token
-  const loginPage = await request(loginUrl, { method: "GET" });
+  console.log(`🔍 Fetching ${loginUrl} ...`);
+  const loginPage = await request(loginUrl, {
+    method: "GET",
+    dispatcher: new Agent({
+      headersTimeout: 30000, // 30s header wait
+      bodyTimeout: 30000     // 30s body wait
+    })
+  });
+
   const html = await loginPage.body.text();
   const $ = load(html);
   const csrfToken = $('input[name="_token"]').val();
@@ -49,8 +44,11 @@ export const loginAndAuthorize = async (formData: FormData) => {
     );
   }
 
+  console.log("✅ CSRF token found:", csrfToken);
+
+
   // Step 2: POST login form
-  const password = process.env.PASSWORD as string
+  const password = process.env.PASSWORD as string;
   const loginPayload = new URLSearchParams();
   loginPayload.append("_token", csrfToken as string);
   loginPayload.append("username", username);
@@ -76,7 +74,7 @@ export const loginAndAuthorize = async (formData: FormData) => {
   console.log("✅ Successfuly Login");
 
   // Step 3: GET /oauth/authorize
-  const { verifier, challenge } = generatePKCE();
+  const { verifier, challenge } = GeneratePKCE();
   const state = crypto.randomBytes(16).toString("hex");
   const authorizeUrl = `${authorizeBaseUrl}?client_id=${clientId}&code_challenge=${challenge}&code_challenge_method=S256&lang=en&redirect_uri=${encodeURIComponent(
     redirectUri
@@ -131,8 +129,10 @@ export const loginAndAuthorize = async (formData: FormData) => {
   console.log("✅ Token Generated");
 
   const daily = DailyAPI(tokenBody);
-  const junken = JunkenAPI(tokenBody);
-  const data = [...daily, ...junken];
+  // const junken = JunkenAPI(tokenBody);
+  // const shoot = ShootFranky(tokenBody);  
+  const rotateWheel = WheelApi(tokenBody);
+  const data = [...daily, ...rotateWheel];
 
   for (const element of data) {
     for (let i = 0; i < element.limit; i++) {

@@ -27,6 +27,7 @@ export const ActionAPI = async ({
     const data = await res.json();
     if (data) {
       console.log(`✅ ${title}`);
+      console.log({data: data});
     }
   } catch (err) {
     console.error(`❌ ${title}`);
