@@ -44,24 +44,11 @@ export const JunkenAPI = (tokenBody: tokenBodyType): JunkenRequest[] => {
 };
 
 export const DailyAPI = (tokenBody: tokenBodyType) => {
-    const activityId = "0721d7f6-da3b-4766-bc4f-08215a22e684";
-    const activityId2 = "190c9fc1-e996-42d6-9cc8-3af9566c743d";
-    
+  const activityId = "d28fab8d-47ad-40d7-8a59-11529d9e584c";
   return [
     {
       accessToken: tokenBody.access_token,
       targetURL: `https://activity-api-v3.combo-interactive.com/5f0740de-8045-42d4-8460-b03f340f01a6/premium-check-in/activity/${activityId}/claim`,
-      limit: 1,
-      title: "Daily Claim",
-      payload: {
-        claim_type: "EACH",
-        bundle_type: "FREE",
-      },
-      method: "POST",
-    },
-    {
-      accessToken: tokenBody.access_token,
-      targetURL: `https://activity-api-v3.combo-interactive.com/5f0740de-8045-42d4-8460-b03f340f01a6/premium-check-in/activity/${activityId2}/claim`,
       limit: 1,
       title: "Daily Claim",
       payload: {
