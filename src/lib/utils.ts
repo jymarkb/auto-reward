@@ -20,3 +20,8 @@ export type JunkenRequest = {
   payload: null | {};
   method: "GET" | "POST";
 };
+
+export type FormState  = {
+  isSuccess: boolean;
+  isSubmit: boolean | null;
+}
