@@ -12,10 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Axe, Bot } from "lucide-react";
 import React, { useState } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function FormUI() {
   const [formData, setFormData] = useState({
     username: "",
+    eventCode:""
   });
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +42,15 @@ export default function FormUI() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    console.log(name, value);
+    
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSelectChange = (name: keyof typeof formData) => (value: string) => {
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -55,16 +66,26 @@ export default function FormUI() {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <Label htmlFor="username">Username</Label>
+        <Select name="username" onValueChange={handleSelectChange("username")}>
+          <SelectTrigger className=" ">
+            <SelectValue placeholder="Username" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="lovekosiax">lovekosiax</SelectItem>
+            <SelectItem value="lovekosiax1">lovekosiax1</SelectItem>
+            <SelectItem value="ezpz1x">ezpz1x</SelectItem>
+            <SelectItem value="ezpz2x">ezpz2x</SelectItem>
+            <SelectItem value="ezpz4x">ezpz4x</SelectItem>
+          </SelectContent>
+        </Select>
+        <Label htmlFor="code">Code</Label>
         <Input
-          id="username"
-          name="username"
+          id="eventCode"
+          name="eventCode"
           required
-          value={formData.username}
+          value={formData.eventCode}
           onChange={handleChange}
         />
-        <Label htmlFor="password">Password</Label>
-        <Input id="password" type="password" name="password" />
       </CardContent>
       <CardFooter>
         <Button

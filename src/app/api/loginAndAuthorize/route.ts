@@ -5,10 +5,13 @@ import { CookieJar } from "tough-cookie";;
 import crypto from "crypto";
 import { URLSearchParams } from "url";
 import { tokenBodyType } from "@/lib/utils";
-import { JunkenAPI, DailyAPI, ShootFranky, WheelApi } from "@/lib/static";
+import { DailyAPI, CodeClaim } from "@/lib/static";
 import { ActionAPI } from "@/app/actions/Action";
 import { GeneratePKCE } from "@/app/actions/Generate";
 import { NextResponse } from "next/server";
+import { getClaimableTargets, getPremiumCheckInIds } from "@/lib/site";
+
+const users = ["lovekosiax", "lovekosiax1", "ezpz1x", "ezpz2x", "ezpz3x"];
 
 export const POST = async (req: Request) => {
 
@@ -21,9 +24,9 @@ export const POST = async (req: Request) => {
     const jar = new CookieJar();
 
     const body = await req.json();
-    const { username } = body;
+    const { username, eventCode } = body;
 
-    if (!username) {
+    if (!username || !users.includes(username)) {
         return NextResponse.json(
             { success: false, message: "Invalid credentials" },
             { status: 401 }
@@ -53,7 +56,6 @@ export const POST = async (req: Request) => {
     }
 
     console.log("✅ CSRF token found:", csrfToken);
-
 
     // Step 2: POST login form
     const password = process.env.PASSWORD as string;
@@ -134,14 +136,35 @@ export const POST = async (req: Request) => {
 
     console.log("✅ Token Generated");
 
-    const daily = DailyAPI(tokenBody);
-    // const junken = JunkenAPI(tokenBody);
-    // const shoot = ShootFranky(tokenBody);  
-    const rotateWheel = WheelApi(tokenBody);
-    const data = [...daily, ...rotateWheel];
+    let actionsToRun = [];
 
-    for (const element of data) {
-        for (let i = 0; i < element.limit; i++) {
+    const multiEvent = eventCode.length > 0 ? eventCode.split(",") : [];
+    if (multiEvent.length) {
+        for (const listCode of multiEvent) {
+            actionsToRun.push(...CodeClaim(tokenBody, listCode));
+        }
+    }
+
+    else {
+        // START GET ALL ACTIVE DAILY
+        const activityIds = await getPremiumCheckInIds(tokenBody.access_token);
+
+
+        for (const id of activityIds) {
+            const targets = await getClaimableTargets(tokenBody.access_token, id);
+            for (const target of targets) {
+                actionsToRun.push(
+                    ...DailyAPI(tokenBody, target.activityId, target.bundleType, target.position)
+                );
+            }
+        }
+        // END GET ALL ACTIVE DAILY
+
+        // ADD HERE OTHER ACTION
+    }
+
+    for (const element of actionsToRun) {
+        if (element.limit > 0) {
             await ActionAPI(element);
         }
     }
