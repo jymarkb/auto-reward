@@ -11,7 +11,7 @@ import { GeneratePKCE } from "@/app/actions/Generate";
 import { NextResponse } from "next/server";
 import { getClaimableTargets, getPremiumCheckInIds } from "@/lib/site";
 
-const users = ["lovekosiax", "lovekosiax1", "ezpz1x", "ezpz2x", "ezpz3x"];
+const users = ["lovekosiax", "lovekosiax1", "ezpz1x", "ezpz2x", "ezpz4x"];
 
 export const POST = async (req: Request) => {
 
