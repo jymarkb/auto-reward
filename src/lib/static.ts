@@ -104,7 +104,7 @@ export const WheelApi = (tokenBody: tokenBodyType) => {
       method: "POST",
       title: "Wheel Game",
       limit: 1,
-      targetURL: "https://activity-api.combo-interactive.com/treasure-hunter/69429ba5-862e-413e-8db5-c66e2b3ac585/play",
+      targetURL: "https://activity-api.combo-interactive.com/treasure-hunter/06a26e4f-131b-4406-9977-5874a455e755/play",
       payload: {
         board_type: "MAIN",
         action: "PULL_FREE"
