@@ -19,7 +19,7 @@ export const POST = async (req: Request) => {
     const tokenUrl = "https://auth.combo-interactive.com/oauth/token";
     const redirectUri = "https://sea-member.combocabalm.com/oauth/callback";
     const clientId = "c45febcb-fec7-4bd9-a7fc-d777758ee1dd"; ``
-    const loginUrl = "https://auth.combo-interactive.com/cabalmsea/login";
+    const loginUrl = "https://auth.combo-interactive.com/cabalm-sea-web/login";
 
     const jar = new CookieJar();
 
