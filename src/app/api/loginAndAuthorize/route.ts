@@ -5,7 +5,7 @@ import { CookieJar } from "tough-cookie";;
 import crypto from "crypto";
 import { URLSearchParams } from "url";
 import { tokenBodyType } from "@/lib/utils";
-import { DailyAPI, CodeClaim, WheelApi } from "@/lib/static";
+import { DailyAPI, CodeClaim, WheelApi, JunkenAPI } from "@/lib/static";
 import { ActionAPI } from "@/app/actions/Action";
 import { GeneratePKCE } from "@/app/actions/Generate";
 import { NextResponse } from "next/server";
@@ -163,10 +163,14 @@ export const POST = async (req: Request) => {
         // ADD HERE OTHER ACTION
     }
 
-    actionsToRun.push(...WheelApi(tokenBody))
+    actionsToRun.push(...JunkenAPI(tokenBody))
 
     for (const element of actionsToRun) {
-        if (element.limit > 0) {
+        if(element.limit > 0) {
+            for(let i = 0; i < element.limit; i++) {
+                await ActionAPI(element);
+            }
+        } else {
             await ActionAPI(element);
         }
     }

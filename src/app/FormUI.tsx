@@ -78,6 +78,11 @@ export default function FormUI() {
         ...prev,
         [name]: value,
       }));
+
+      setFormState({
+        isSuccess: false,
+        isSubmit: null,
+      });
     };
 
   return (

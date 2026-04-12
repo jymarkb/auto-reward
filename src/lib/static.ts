@@ -5,7 +5,7 @@ export const JunkenAPI = (tokenBody: tokenBodyType): JunkenRequest[] => {
     {
       accessToken: tokenBody.access_token,
       targetURL:
-        "https://activity-api-v3.combo-interactive.com/5f0740de-8045-42d4-8460-b03f340f01a6/rps/775b23f0-00a9-4b46-b60e-bffaee134329/board?board_type=PRINCE",
+        "https://activity-api-v3.combo-interactive.com/5f0740de-8045-42d4-8460-b03f340f01a6/rps/a1f91b21-ba40-435d-968b-34ed5dc74885/board?board_type=PRINCE",
       limit: 1,
       title: "Board Data",
       payload: null,
@@ -14,7 +14,7 @@ export const JunkenAPI = (tokenBody: tokenBodyType): JunkenRequest[] => {
     {
       accessToken: tokenBody.access_token,
       targetURL:
-        "https://activity-api-v3.combo-interactive.com/5f0740de-8045-42d4-8460-b03f340f01a6/rps/775b23f0-00a9-4b46-b60e-bffaee134329/board/start?board_type=PRINCE",
+        "https://activity-api-v3.combo-interactive.com/5f0740de-8045-42d4-8460-b03f340f01a6/rps/a1f91b21-ba40-435d-968b-34ed5dc74885/board/start?board_type=PRINCE",
       limit: 1,
       title: "Start Junken",
       payload: null,
@@ -23,7 +23,7 @@ export const JunkenAPI = (tokenBody: tokenBodyType): JunkenRequest[] => {
     {
       accessToken: tokenBody.access_token,
       targetURL:
-        "https://activity-api-v3.combo-interactive.com/5f0740de-8045-42d4-8460-b03f340f01a6/rps/775b23f0-00a9-4b46-b60e-bffaee134329/board/play?board_type=PRINCE",
+        "https://activity-api-v3.combo-interactive.com/5f0740de-8045-42d4-8460-b03f340f01a6/rps/a1f91b21-ba40-435d-968b-34ed5dc74885/board/play?board_type=PRINCE",
       limit: 5,
       title: "Play Junken",
       payload: {
@@ -34,7 +34,7 @@ export const JunkenAPI = (tokenBody: tokenBodyType): JunkenRequest[] => {
     {
       accessToken: tokenBody.access_token,
       targetURL:
-        "https://activity-api-v3.combo-interactive.com/5f0740de-8045-42d4-8460-b03f340f01a6/rps/775b23f0-00a9-4b46-b60e-bffaee134329/board/claim?board_type=PRINCE",
+        "https://activity-api-v3.combo-interactive.com/5f0740de-8045-42d4-8460-b03f340f01a6/rps/a1f91b21-ba40-435d-968b-34ed5dc74885/board/claim?board_type=PRINCE",
       limit: 1,
       title: "Claim Junken",
       payload: null,
